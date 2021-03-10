@@ -1,0 +1,20 @@
+{
+    "name": "ArduinoUtilities-Stepper",
+    "version": "0.0.1",
+    "description": "Stepper Motor Control for Arduino",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kescholm/ArduinoUtilities-Stepper.git"
+    },
+    "authors":
+    [
+      {
+        "name": "Kyle Chisholm",
+        "url": "https://www.kylechisholm.com/contact"
+      }
+    ],
+    "license": "MIT",
+    "dependencies": {},
+    "frameworks": "arduino",
+    "platforms": [ "espressif32", "amtelavr" ]
+}

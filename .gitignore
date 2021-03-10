@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Platform IO
+.vscode/c_cpp_properties.json
+.vscode/launch.json
+.pio/
+
+# python
+.venv
