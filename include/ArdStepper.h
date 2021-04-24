@@ -1,7 +1,6 @@
-
 /**
- * @file       ard_stepper.h
- * @author     Kyle Chisholm (dev@kylechisholm.ca)
+ * @file       ArdStepper.h
+ * @author     Kyle Escholm
  * @brief      Stepper motor control
  *
  * @details

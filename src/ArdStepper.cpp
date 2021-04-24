@@ -3,13 +3,17 @@
 #include "ArdStepper.h"
 
 #ifdef __AVR__
-
 #include <TimerOne.h>
+#elif defined(ESP8266)
+
+#define TIMER_INTERRUPT_DEBUG         0
+#define _TIMERINTERRUPT_LOGLEVEL_     0
+
+#include <ESP8266TimerInterrupt.h>
+#endif
 
 #ifndef IRAM_ATTR
 #define IRAM_ATTR
-#endif
-
 #endif
 
 // pulse train
@@ -78,7 +82,7 @@ static void ard_stepper_guard_on() { noInterrupts(); }
 
 static void ard_stepper_guard_off() { interrupts(); }
 
-#else
+#elif defined(ESP_PLATFORM)
 
 // ESP32 implementation
 // --------------------
@@ -130,9 +134,61 @@ static void ard_stepper_pulse_timer_disable() {
     timerAlarmDisable(s_timer);
 }
 
+#elif defined(ESP8266)
+
+// ESP6266 implementation
+// ----------------------
+
+// Init ESP8266Timer
+ESP8266Timer s_timer;
+
+static void ard_stepper_isr_pulse_train() {
+    // apply pulse train
+    if (s_pulse_state.steps_remaining > 0) {
+        // send pulse
+        digitalWrite(s_pins.pulse, HIGH);
+        // reset pulse
+        delayMicroseconds(ARD_STEPPER_PULSE_WIDTH_MICROSECONDS);
+        digitalWrite(s_pins.pulse, LOW);
+        // decrement remaining steps and advance timing
+        s_pulse_state.steps_remaining -= 1;
+    }
+}
+
+static void ard_stepper_pulse_timer_setup(const uint32_t step_size_us) {
+    // use Timer library
+    s_timer.attachInterruptInterval(step_size_us, ard_stepper_isr_pulse_train);
+    s_timer.disableTimer();
+}
+
+static void ard_stepper_pulse_timer_update(const uint32_t step_size_us) {
+    s_timer.setInterval(step_size_us, ard_stepper_isr_pulse_train);
+}
+
+static void ard_stepper_pulse_timer_disable() {
+    s_pulse_state.enabled = false;
+    digitalWrite(s_pins.enable, (ARD_STEPPER_ENABLE_POLARITY ? HIGH : LOW));
+    s_timer.disableTimer();
+}
+
+static void ard_stepper_pulse_timer_enable() {
+    s_timer.enableTimer();
+    digitalWrite(s_pins.enable, (ARD_STEPPER_ENABLE_POLARITY ? LOW : HIGH));
+    s_pulse_state.enabled = true;
+}
+
+static void ard_stepper_guard_on() { noInterrupts(); }
+
+static void ard_stepper_guard_off() { interrupts(); }
+
+#else
+
+  #error ArdStepper is only compatible with AVR, ESP32, or ESP8266 platforms
+
 #endif
 
 // Common Implementation
+// ---------------------
 
 static void ard_stepper_pulse_train_reset(const bool enable) {
     ard_stepper_guard_on();
